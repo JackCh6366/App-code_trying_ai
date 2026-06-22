@@ -1,0 +1,6 @@
+{
+  "name": "AI Code Assistant",
+  "description": "一個基於 Vite、TypeScript 及 React 打造的 AI 程式碼編寫與編修工具。支援 AI 即時生成程式碼、架構說明、自動排錯及程式碼對比編輯。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
