@@ -153,7 +153,7 @@ JSON 範例格式：
       if (provider === "nvidia-code") {
         modelName = "google/codegemma-7b";
       } else if (provider === "nvidia") {
-        modelName = "nvidia/nemotron-3-ultra-550b-a55b";
+        modelName = "nvidia/llama-3.1-nemotron-70b-instruct";
       } else if (provider === "meta") {
         modelName = "meta/llama-3.3-70b-instruct";
       } else {
