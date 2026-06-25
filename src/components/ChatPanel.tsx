@@ -100,8 +100,8 @@ export default function ChatPanel({
               className="w-full bg-[#22222A] text-[11px] font-mono text-white border border-[#3D3D48] py-2 px-3 focus:outline-none focus:border-[#00FF7F] rounded-none cursor-pointer appearance-none"
             >
               <option value="google-gemini">Google Gemini (gemini-3.1-flash-lite)</option>
-              <option value="nvidia-code">NVIDIA code (google/codegemma-7b)</option>
-              <option value="nvidia">NVIDIA (llama-3.1-nemotron-70b-instruct)</option>
+              <option value="nvidia-code">NVIDIA code (mistral-large-3-675b)</option>
+              <option value="nvidia">NVIDIA (nemotron-super-49b-v1.5)</option>
               <option value="meta">Meta (llama-3.3-70b-instruct)</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#8E8E9F]">
