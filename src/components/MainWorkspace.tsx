@@ -247,7 +247,16 @@ export default function MainWorkspace() {
         }),
       });
 
-      const data = await response.json();
+      let data: any;
+      const responseText = await response.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch (jsonErr) {
+        if (!response.ok) {
+          throw new Error(`伺服器錯誤 (HTTP ${response.status}): ${responseText || "無說明"}`);
+        }
+        throw new Error("無法解析後端回傳的資料格式。");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "連線至後端助理模組時發生問題！");

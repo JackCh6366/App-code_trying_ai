@@ -170,7 +170,7 @@ JSON 範例格式：
 
       let modelName = "";
       if (provider === "nvidia-code") {
-        modelName = "nvidia/nv-embedcode-7b-v1";
+        modelName = "meta/codellama-70b-instruct";
       } else if (provider === "nvidia") {
         modelName = "nvidia/nemotron-3-ultra-550b-a55b";
       } else if (provider === "meta") {
