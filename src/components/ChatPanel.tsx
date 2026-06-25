@@ -9,6 +9,8 @@ interface ChatPanelProps {
   activeFile: CodeFile | null;
   onApplyCode: (code: string, fileName?: string) => void;
   onOpenDiff: (recommendedCode: string) => void;
+  provider: string;
+  onProviderChange: (provider: string) => void;
 }
 
 const TEMPLATE_PROMPTS = [
@@ -20,7 +22,7 @@ const TEMPLATE_PROMPTS = [
   {
     icon: "🔍",
     label: "解釋右側程式碼架構",
-    prompt: "請詳細解釋右側目前開啟的程式碼，包含變數宣告、各函式的功能以及它遵循的設計模式與軟體架構。",
+    prompt: "請詳細解釋右側目前開啟的程式碼，包含變數宣告、各函式的功能以及它遵循的設計模式與軟體架架構。",
   },
   {
     icon: "🛠",
@@ -41,6 +43,8 @@ export default function ChatPanel({
   activeFile,
   onApplyCode,
   onOpenDiff,
+  provider,
+  onProviderChange,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
 
@@ -82,6 +86,30 @@ export default function ChatPanel({
           <p className="text-[9px] text-[#8E8E9F] uppercase tracking-[0.2em] font-bold mt-1">
             AI CODE REVISION ENGINE
           </p>
+        </div>
+
+        {/* AI Service Selector */}
+        <div className="mt-3 flex flex-col gap-1.5 border-t border-[#2D2D35] pt-3">
+          <label className="text-[9px] text-[#8E8E9F] uppercase tracking-widest font-black font-mono">
+            SELECT AI ENGINE
+          </label>
+          <div className="relative">
+            <select
+              value={provider}
+              onChange={(e) => onProviderChange(e.target.value)}
+              className="w-full bg-[#22222A] text-[11px] font-mono text-white border border-[#3D3D48] py-2 px-3 focus:outline-none focus:border-[#00FF7F] rounded-none cursor-pointer appearance-none"
+            >
+              <option value="google-gemini">Google Gemini (gemini-3.1-flash-lite)</option>
+              <option value="nvidia-code">NVIDIA code (nv-embedcode-7b-v1)</option>
+              <option value="nvidia">NVIDIA (nemotron-3-ultra-550b-a55b)</option>
+              <option value="meta">Meta (llama-3.3-70b-instruct)</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#8E8E9F]">
+              <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -206,7 +234,7 @@ export default function ChatPanel({
                 <span>CODE_TRYING AI PARSING & ARCHITECTING</span>
               </div>
               <div className="text-[#555561] select-none leading-relaxed">
-                $ gemini-analyze --syntax-tree --lang=zh-tw
+                $ {provider}-analyze --syntax-tree --lang=zh-tw
                 <br />
                 &gt; Preparing high-typography responses...
               </div>

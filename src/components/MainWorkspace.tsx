@@ -107,6 +107,7 @@ export default function MainWorkspace() {
   const [diffRecommendCode, setDiffRecommendCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [provider, setProvider] = useState<string>("google-gemini");
 
   // Load project session from Local Storage on mount
   useEffect(() => {
@@ -233,10 +234,11 @@ export default function MainWorkspace() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/code/assistant", {
+      const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider,
           messages: updatedMessages.slice(-8), // Send recent context only to keep tokens fast
           currentCode: activeFile?.content || "",
           instruction: userPromptText,
@@ -272,14 +274,14 @@ export default function MainWorkspace() {
       }
     } catch (err: any) {
       console.error(err);
-      const isKeyError = err.message.includes("GEMINI_API_KEY") || err.message.includes("Secrets");
+      const isKeyError = err.message.includes("GEMINI_API_KEY") || err.message.includes("Secrets") || err.message.includes("環境變數");
       setErrorMessage(err.message);
 
       const errorReply: Message = {
         id: "err_" + Date.now(),
         role: "assistant",
         text: isKeyError
-          ? `⚠️ 連線錯誤：需要配置 GEMINI_API_KEY。請於畫面右上方的 [Settings > Secrets] 貼上您的 Gemini API key 之後再繼續。`
+          ? `⚠️ 連線錯誤：後端需要配置 GEMINI_API_KEY。請確保環境變數（例如本機開發為根目錄下的 .env.local 檔案，Vercel 部署則為專案設定裡的 Environment Variables）中已正確填入您的 Gemini API 金鑰。`
           : `⚠️ 對話連線中斷：${err.message}`,
         timestamp: new Date().toLocaleTimeString(),
       };
@@ -383,6 +385,8 @@ export default function MainWorkspace() {
               handleAcceptChanges();
             }}
             onOpenDiff={handleOpenDiff}
+            provider={provider}
+            onProviderChange={setProvider}
           />
         </div>
 

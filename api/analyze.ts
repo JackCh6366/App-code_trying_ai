@@ -1,17 +1,5 @@
-import express from "express";
-import path from "path";
-import { createServer as createViteServer } from "vite";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI, Type } from "@google/genai";
-import dotenv from "dotenv";
-
-dotenv.config({ path: ".env.local" });
-dotenv.config();
-
-const app = express();
-const PORT = 3000;
-
-// Increase request size limit for large codebase contexts
-app.use(express.json({ limit: "15mb" }));
 
 // Helper to initialize Gemini SDK safely and lazy-loaded
 function getGeminiClient() {
@@ -23,21 +11,11 @@ function getGeminiClient() {
     apiKey: apiKey,
     httpOptions: {
       headers: {
-        "User-Agent": "aistudio-build",
+        "User-Agent": "vercel-build",
       },
     },
   });
 }
-
-// API Health check
-app.get("/api/health", (req, res) => {
-  const apiKeyStatus = process.env.GEMINI_API_KEY ? "CONFIGURED" : "MISSING";
-  res.json({
-    status: "ok",
-    apiKeyStatus,
-    timestamp: new Date().toISOString(),
-  });
-});
 
 // Robust JSON extraction helper
 function parseJSONResponse(text: string) {
@@ -65,8 +43,12 @@ function parseJSONResponse(text: string) {
   }
 }
 
-// AI Assistant endpoint supporting multiple providers
-app.post("/api/analyze", async (req: express.Request, res: express.Response): Promise<void> => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
   try {
     const { provider, messages, currentCode, instruction, fileName, fileLanguage } = req.body;
 
@@ -101,10 +83,9 @@ JSON 範例格式：
     if (provider === "google-gemini" || provider === "gemini") {
       const ai = getGeminiClient();
       if (!ai) {
-        res.status(400).json({
-          error: "請設定 `GEMINI_API_KEY` 環境變數。如果是在本機開發，請在專案根目錄建立 `.env.local` 並且加入 `GEMINI_API_KEY=你的金鑰` 後重啟伺服器；如果是部署在 Vercel，請至專案設定 (Settings > Environment Variables) 配置此變數。",
+        return res.status(400).json({
+          error: "請在環境變數中設定 `GEMINI_API_KEY`。如果您使用的是 Vercel 部署，請在專案的 Settings > Environment Variables 配置此變數。",
         });
-        return;
       }
 
       // Map conversation messages to conversational inputs
@@ -157,15 +138,15 @@ JSON 範例格式：
       }
 
       const result = JSON.parse(textResponse);
-      res.json(result);
+      return res.json(result);
 
     } else {
+      // Handle NVIDIA / Meta models via NVIDIA API Key
       const nvidiaApiKey = process.env.NVIDIA_API_KEY;
       if (!nvidiaApiKey || nvidiaApiKey === "MY_NVIDIA_API_KEY" || nvidiaApiKey === "") {
-        res.status(400).json({
-          error: "請設定 `NVIDIA_API_KEY` 環境變數。如果是在本機開發，請在專案根目錄建立 `.env.local` 並且加入 `NVIDIA_API_KEY=你的金鑰` 後重啟伺服器；如果是部署在 Vercel，請至專案設定 (Settings > Environment Variables) 配置此變數。",
+        return res.status(400).json({
+          error: "請在環境變數中設定 `NVIDIA_API_KEY`。如果您使用的是 Vercel 部署，請在專案的 Settings > Environment Variables 配置此變數。",
         });
-        return;
       }
 
       let modelName = "";
@@ -176,10 +157,10 @@ JSON 範例格式：
       } else if (provider === "meta") {
         modelName = "meta/llama-3.3-70b-instruct";
       } else {
-        res.status(400).json({ error: `不支援的 AI 服務商: ${provider}` });
-        return;
+        return res.status(400).json({ error: `不支援的 AI 服務商: ${provider}` });
       }
 
+      // Map history to standard chat completion messages
       const apiMessages = [
         { role: "system", content: systemInstruction },
         ...(messages || []).map((m: any) => ({
@@ -216,37 +197,12 @@ JSON 範例格式：
       }
 
       const result = parseJSONResponse(textResponse);
-      res.json(result);
+      return res.json(result);
     }
   } catch (error: any) {
-    console.error("Local API Error:", error);
-    res.status(500).json({
+    console.error("API Error:", error);
+    return res.status(500).json({
       error: error.message || "AI 呼叫失敗，請檢查系統記錄或確認網路狀況。",
     });
   }
-});
-
-// Configure Vite or Static server
-async function setupServer() {
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Starting server in DEVELOPMENT mode with Vite Middleware...");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    console.log("Starting server in PRODUCTION mode...");
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`AI Code Assistant full-stack server listening on http://localhost:${PORT}`);
-  });
 }
-
-setupServer();
