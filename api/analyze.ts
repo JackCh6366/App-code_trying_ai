@@ -151,7 +151,7 @@ JSON 範例格式：
 
       let modelName = "";
       if (provider === "nvidia-code") {
-        modelName = "meta/codellama-70b-instruct";
+        modelName = "google/codegemma-7b";
       } else if (provider === "nvidia") {
         modelName = "nvidia/nemotron-3-ultra-550b-a55b";
       } else if (provider === "meta") {
